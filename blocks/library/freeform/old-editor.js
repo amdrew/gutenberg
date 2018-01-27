@@ -58,7 +58,7 @@ export default class OldEditor extends Component {
 	componentDidUpdate( prevProps ) {
 		const { id, attributes: { content } } = this.props;
 
-		const editor = window.tinymce.get( id );
+		const editor = window.tinymce.get( `editor-${ id }` );
 
 		if ( prevProps.attributes.content !== content ) {
 			editor.setContent( content || '' );
@@ -72,13 +72,12 @@ export default class OldEditor extends Component {
 	initialize() {
 		const { id } = this.props;
 		const { settings } = window.wpEditorL10n.tinymce;
-
-		wp.oldEditor.initialize( id, {
+		wp.oldEditor.initialize( `editor-${ id }`, {
 			tinymce: {
 				...settings,
 				inline: true,
 				content_css: false,
-				fixed_toolbar_container: '#' + id + '-toolbar',
+				fixed_toolbar_container: `#toolbar-${ id }`,
 				setup: this.onSetup,
 			},
 		} );
@@ -181,14 +180,14 @@ export default class OldEditor extends Component {
 		return [
 			<div
 				key="toolbar"
-				id={ id + '-toolbar' }
+				id={ `toolbar-${ id }` }
 				ref={ ref => this.ref = ref }
 				className="freeform-toolbar"
 				style={ ! focus ? { display: 'none' } : {} }
 			/>,
 			<div
 				key="editor"
-				id={ id }
+				id={ `editor-${ id }` }
 				className={ classnames( className, 'blocks-editable__tinymce' ) }
 			/>,
 		];
