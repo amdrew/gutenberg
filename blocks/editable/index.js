@@ -13,6 +13,7 @@ import {
 	find,
 	defer,
 	noop,
+	pull,
 } from 'lodash';
 import { nodeListToReact } from 'dom-react';
 import 'element-closest';
@@ -34,6 +35,11 @@ import TinyMCE from './tinymce';
 import { pickAriaProps } from './aria';
 import patterns from './patterns';
 import { EVENTS } from './constants';
+
+/**
+ * Browser dependencies
+ */
+const { setTimeout, clearTimeout } = window;
 
 const { BACKSPACE, DELETE, ENTER } = keycodes;
 
@@ -102,12 +108,15 @@ export default class Editable extends Component {
 		this.maybePropagateUndo = this.maybePropagateUndo.bind( this );
 		this.onPastePreProcess = this.onPastePreProcess.bind( this );
 		this.onPaste = this.onPaste.bind( this );
+		this.setSafeTimeout = this.setSafeTimeout.bind( this );
 
 		this.state = {
 			formats: {},
 			empty: ! value || ! value.length,
 			selectedNodeId: 0,
 		};
+
+		this.timeouts = [];
 	}
 
 	/**
@@ -302,11 +311,11 @@ export default class Editable extends Component {
 
 			if ( isEmpty && this.props.onReplace ) {
 				// Necessary to allow the paste bin to be removed without errors.
-				setTimeout( () => this.props.onReplace( content ) );
+				this.setSafeTimeout( () => this.props.onReplace( content ) );
 			} else if ( this.props.onSplit ) {
 				// Necessary to get the right range.
 				// Also done in the TinyMCE paste plugin.
-				setTimeout( () => this.splitContent( content ) );
+				this.setSafeTimeout( () => this.splitContent( content ) );
 			}
 
 			event.preventDefault();
@@ -614,6 +623,10 @@ export default class Editable extends Component {
 	 * @param {Array} blocks The blocks to add after the split point.
 	 */
 	splitContent( blocks = [] ) {
+		if ( ! this.props.onSplit ) {
+			return;
+		}
+
 		const { dom } = this.editor;
 		const rootNode = this.editor.getBody();
 		const beforeRange = dom.createRng();
@@ -755,6 +768,26 @@ export default class Editable extends Component {
 
 	componentWillUnmount() {
 		this.onChange();
+		this.timeouts.forEach( clearTimeout );
+		this.timeouts = [];
+	}
+
+	/**
+	 * Sets a timeout, stores reference in `this.timeouts`, and checks if the
+	 * editor still exists when calling the callback.
+	 *
+	 * @param {Function} callback The function to call.
+	 */
+	setSafeTimeout( callback ) {
+		const timeout = setTimeout( () => {
+			pull( this.timeouts, timeout );
+
+			if ( ! this.editor.removed ) {
+				callback();
+			}
+		} );
+
+		this.timeouts.push( timeout );
 	}
 
 	componentDidUpdate( prevProps ) {
