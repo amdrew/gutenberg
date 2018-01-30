@@ -19,7 +19,7 @@ export default function( node ) {
 
 	let wrapper = node;
 
-	while ( wrapper.nodeName !== 'P' ) {
+	while ( wrapper && wrapper.nodeName !== 'P' ) {
 		wrapper = wrapper.parentElement;
 	}
 
