@@ -7,9 +7,9 @@ import { unescape as unescapeString, find, throttle } from 'lodash';
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
-import { Component } from '@wordpress/element';
-import { FormTokenField } from '@wordpress/components';
+import { _x, sprintf } from '@wordpress/i18n';
+import { Component, compose } from '@wordpress/element';
+import { FormTokenField, withAPIData } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -151,14 +151,19 @@ class FlatTermSelector extends Component {
 	}
 
 	render() {
+		const { taxonomy, label } = this.props;
+		if ( ! taxonomy.data ) {
+			return null;
+		}
+
 		const { loading, availableTerms, selectedTerms } = this.state;
-		const { label, slug } = this.props;
+		const { labels } = taxonomy.data;
 		const termNames = availableTerms.map( ( term ) => term.name );
 
-		const newTermPlaceholderLabel = slug === 'post_tag' ? __( 'Add New Tag' ) : __( 'Add New Term' );
-		const termAddedLabel = slug === 'post_tag' ? __( 'Tag added' ) : __( 'Term added' );
-		const termRemovedLabel = slug === 'post_tag' ? __( 'Tag removed' ) : __( 'Term removed' );
-		const removeTermLabel = slug === 'post_tag' ? __( 'Remove Tag: %s' ) : __( 'Remove Term: %s' );
+		const newTermPlaceholderLabel = labels.add_new_item;
+		const termAddedLabel = sprintf( _x( '%s added', 'term' ), labels.singular_name );
+		const termRemovedLabel = sprintf( _x( '%s removed', 'term' ), labels.singular_name );
+		const removeTermLabel = sprintf( _x( 'Remove %s: %%s', 'term' ), labels.singular_name );
 
 		return (
 			<div className="editor-post-taxonomies__flat-terms-selector">
@@ -183,7 +188,14 @@ class FlatTermSelector extends Component {
 	}
 }
 
-export default connect(
+const applyWithAPIData = withAPIData( ( props ) => {
+	const { slug } = props;
+	return {
+		taxonomy: `/wp/v2/taxonomies/${ slug }?context=edit`,
+	};
+} );
+
+const applyConnect = connect(
 	( state, ownProps ) => {
 		return {
 			terms: getEditedPostAttribute( state, ownProps.restBase ),
@@ -196,4 +208,9 @@ export default connect(
 			},
 		};
 	}
+);
+
+export default compose(
+	applyWithAPIData,
+	applyConnect,
 )( FlatTermSelector );

@@ -2,14 +2,14 @@
  * External dependencies
  */
 import { connect } from 'react-redux';
-import { unescape as unescapeString, without, map, repeat, find, some } from 'lodash';
+import { get, unescape as unescapeString, without, map, repeat, find, some } from 'lodash';
 
 /**
  * WordPress dependencies
  */
-import { __, _x } from '@wordpress/i18n';
+import { _x, sprintf } from '@wordpress/i18n';
 import { Component, compose } from '@wordpress/element';
-import { withInstanceId, withSpokenMessages } from '@wordpress/components';
+import { withAPIData, withInstanceId, withSpokenMessages } from '@wordpress/components';
 import { buildTermsTree } from '@wordpress/utils';
 
 /**
@@ -79,7 +79,7 @@ class HierarchicalTermSelector extends Component {
 
 	onAddTerm( event ) {
 		event.preventDefault();
-		const { onUpdateTerms, restBase, terms, slug } = this.props;
+		const { onUpdateTerms, restBase, terms } = this.props;
 		const { formName, formParent, adding, availableTerms } = this.state;
 		if ( formName === '' || adding ) {
 			return;
@@ -128,7 +128,7 @@ class HierarchicalTermSelector extends Component {
 			.then( ( term ) => {
 				const hasTerm = !! find( this.state.availableTerms, ( availableTerm ) => availableTerm.id === term.id );
 				const newAvailableTerms = hasTerm ? this.state.availableTerms : [ term, ...this.state.availableTerms ];
-				const termAddedMessage = slug === 'category' ? __( 'Category added' ) : __( 'Term added' );
+				const termAddedMessage = sprintf( _x( '%s added', 'term' ), get( this.props.taxonomy, [ 'data', 'labels', 'singular_name' ] ) );
 				this.props.speak( termAddedMessage, 'assertive' );
 				this.setState( {
 					adding: false,
@@ -216,14 +216,17 @@ class HierarchicalTermSelector extends Component {
 	}
 
 	render() {
+		const { label, taxonomy, instanceId } = this.props;
+		if ( ! taxonomy.data ) {
+			return null;
+		}
 		const { availableTermsTree, availableTerms, formName, formParent, loading, showForm } = this.state;
-		const { label, slug, instanceId } = this.props;
-
-		const newTermButtonLabel = slug === 'category' ? __( 'Add new category' ) : __( 'Add new term' );
-		const newTermLabel = slug === 'category' ? __( 'Category Name' ) : __( 'Term Name' );
-		const parentSelectLabel = slug === 'category' ? __( 'Parent Category' ) : __( 'Parent Term' );
-		const noParentOption = slug === 'category' ? _x( 'None', 'category' ) : _x( 'None', 'term' );
-		const newTermSubmitLabel = slug === 'category' ? __( 'Add Category' ) : __( 'Add Term' );
+		const { labels } = taxonomy.data;
+		const newTermButtonLabel = labels.add_new_item;
+		const newTermLabel = labels.new_item_name;
+		const parentSelectLabel = labels.parent_item;
+		const noParentOption = `— ${ labels.parent_item } —`;
+		const newTermSubmitLabel = labels.add_new_item;
 		const inputId = `editor-post-taxonomies__hierarchical-terms-input-${ instanceId }`;
 		const selectId = `editor-post-taxonomies__hierarchical-terms-select-${ instanceId }`;
 
@@ -290,6 +293,13 @@ class HierarchicalTermSelector extends Component {
 	}
 }
 
+const applyWithAPIData = withAPIData( ( props ) => {
+	const { slug } = props;
+	return {
+		taxonomy: `/wp/v2/taxonomies/${ slug }?context=edit`,
+	};
+} );
+
 const applyConnect = connect(
 	( state, onwProps ) => {
 		return {
@@ -304,6 +314,7 @@ const applyConnect = connect(
 );
 
 export default compose(
+	applyWithAPIData,
 	applyConnect,
 	withSpokenMessages,
 	withInstanceId
