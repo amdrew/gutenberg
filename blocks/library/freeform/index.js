@@ -1,6 +1,7 @@
 /**
  * WordPress dependencies
  */
+import { DangerousHTML } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
@@ -27,10 +28,15 @@ export const settings = {
 		},
 	},
 
+	supports: {
+		className: false,
+	},
+
 	edit: OldEditor,
 
 	save( { attributes } ) {
 		const { content } = attributes;
-		return content;
+
+		return <DangerousHTML>{ content }</DangerousHTML>;
 	},
 };

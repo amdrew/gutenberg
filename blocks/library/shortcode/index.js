@@ -6,6 +6,7 @@ import TextareaAutosize from 'react-autosize-textarea';
 /**
  * WordPress dependencies
  */
+import { DangerousHTML } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { withInstanceId, Dashicon } from '@wordpress/components';
 
@@ -87,6 +88,6 @@ export const settings = {
 	),
 
 	save( { attributes } ) {
-		return attributes.text;
+		return <DangerousHTML>{ attributes.text }</DangerousHTML>;
 	},
 };
