@@ -47,6 +47,8 @@ export function getSaveElement( blockType, attributes ) {
 		saveElement = save( { attributes } );
 	}
 
+	saveElement = applyFilters( 'blocks.getSaveContent.saveElement', saveElement, blockType, attributes );
+
 	const addExtraContainerProps = ( element ) => {
 		if ( ! element || ! isObject( element ) ) {
 			return element;
