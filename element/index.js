@@ -4,7 +4,13 @@
 import { createElement, Component, cloneElement, Children, Fragment } from 'react';
 import { render, findDOMNode, createPortal, unmountComponentAtNode } from 'react-dom';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { camelCase, flowRight, isString, upperFirst } from 'lodash';
+import {
+	camelCase,
+	flowRight,
+	isString,
+	upperFirst,
+	isEmpty,
+} from 'lodash';
 
 /**
  * Returns a new element of given type. Type can be either a string tag name or
@@ -160,14 +166,22 @@ export function getWrapperDisplayName( BaseComponent, wrapperName ) {
 /**
  * Component used as equivalent of Fragment with unescaped HTML, in cases where
  * it is desirable to render dangerous HTML without needing a wrapper element.
+ * To preserve additional props, a `div` wrapper _will_ be created if any props
+ * aside from `children` are passed.
  *
  * @param {string} props.children HTML to render.
  *
  * @returns {WPElement} Dangerously-rendering element.
  */
-export function DangerousHTML( { children } ) {
-	return (
-		<wp-dangerous-html
-			dangerouslySetInnerHTML={ { __html: children } } />
-	);
+export function DangerousHTML( { children, ...props } ) {
+	// Render wrapper only if props are non-empty.
+	const tagName = isEmpty( props ) ? 'wp-dangerous-html' : 'div';
+
+	// Merge HTML into assigned props.
+	props = {
+		dangerouslySetInnerHTML: { __html: children },
+		...props,
+	};
+
+	return createElement( tagName, props );
 }

@@ -160,5 +160,19 @@ describe( 'element', () => {
 			expect( element.prop( 'dangerouslySetInnerHTML' ).__html ).toBe( html );
 			expect( element.prop( 'children' ) ).toBe( undefined );
 		} );
+
+		it( 'creates wrapper if assigned other props', () => {
+			const html = '<p>So scary!</p>';
+			const element = shallow(
+				<DangerousHTML className="foo">
+					{ html }
+				</DangerousHTML>
+			);
+
+			expect( element.type() ).toBe( 'div' );
+			expect( element.prop( 'className' ) ).toBe( 'foo' );
+			expect( element.prop( 'dangerouslySetInnerHTML' ).__html ).toBe( html );
+			expect( element.prop( 'children' ) ).toBe( undefined );
+		} );
 	} );
 } );
