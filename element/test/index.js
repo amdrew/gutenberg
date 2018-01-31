@@ -1,4 +1,9 @@
 /**
+ * External dependencies
+ */
+import { shallow } from 'enzyme';
+
+/**
  * Internal dependencies
  */
 import {
@@ -8,6 +13,7 @@ import {
 	renderToString,
 	switchChildrenNodeName,
 	getWrapperDisplayName,
+	DangerousHTML,
 } from '../';
 
 describe( 'element', () => {
@@ -43,6 +49,14 @@ describe( 'element', () => {
 			expect( renderToString(
 				createElement( 'strong', null, 'Courgette' )
 			) ).toBe( '<strong>Courgette</strong>' );
+		} );
+
+		it( 'strips dangerous html wrapper', () => {
+			const html = '<p>So scary!</p>';
+
+			expect( renderToString(
+				<DangerousHTML>{ html }</DangerousHTML>,
+			) ).toBe( html );
 		} );
 	} );
 
@@ -130,6 +144,21 @@ describe( 'element', () => {
 			SomeComponent.displayName = 'CustomDisplayName';
 
 			expect( getWrapperDisplayName( SomeComponent, 'test' ) ).toBe( 'Test(CustomDisplayName)' );
+		} );
+	} );
+
+	describe( 'DangerousHTML', () => {
+		it( 'is dangerous', () => {
+			const html = '<p>So scary!</p>';
+			const element = shallow(
+				<DangerousHTML>
+					{ html }
+				</DangerousHTML>
+			);
+
+			expect( element.type() ).toBe( 'wp-dangerous-html' );
+			expect( element.prop( 'dangerouslySetInnerHTML' ).__html ).toBe( html );
+			expect( element.prop( 'children' ) ).toBe( undefined );
 		} );
 	} );
 } );

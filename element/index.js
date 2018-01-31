@@ -82,7 +82,14 @@ export { createPortal };
  *
  * @returns {String} HTML.
  */
-export { renderToStaticMarkup as renderToString };
+export function renderToString( element ) {
+	let rendered = renderToStaticMarkup( element );
+
+	// Drop raw HTML wrappers (support dangerous inner HTML without wrapper)
+	rendered = rendered.replace( /<\/?wp-dangerous-html>/g, '' );
+
+	return rendered;
+}
 
 /**
  * Concatenate two or more React children objects.
@@ -148,4 +155,19 @@ export function getWrapperDisplayName( BaseComponent, wrapperName ) {
 	const { displayName = BaseComponent.name || 'Component' } = BaseComponent;
 
 	return `${ upperFirst( camelCase( wrapperName ) ) }(${ displayName })`;
+}
+
+/**
+ * Component used as equivalent of Fragment with unescaped HTML, in cases where
+ * it is desirable to render dangerous HTML without needing a wrapper element.
+ *
+ * @param {string} props.children HTML to render.
+ *
+ * @returns {WPElement} Dangerously-rendering element.
+ */
+export function DangerousHTML( { children } ) {
+	return (
+		<wp-dangerous-html
+			dangerouslySetInnerHTML={ { __html: children } } />
+	);
 }
