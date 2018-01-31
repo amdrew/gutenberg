@@ -37,6 +37,8 @@ import { EVENTS } from './constants';
 
 const { BACKSPACE, DELETE, ENTER } = keycodes;
 
+let position;
+
 function createTinyMCEElement( type, props, ...children ) {
 	if ( props[ 'data-mce-bogus' ] === 'all' ) {
 		return null;
@@ -555,6 +557,8 @@ export default class Editable extends Component {
 		// If we click shift+Enter on inline Editables, we avoid creating two contenteditables
 		// We also split the content and call the onSplit prop if provided.
 		if ( event.keyCode === ENTER ) {
+			position = this.editor.getBody().getBoundingClientRect();
+
 			if ( this.props.multiline ) {
 				if ( ! this.props.onSplit ) {
 					return;
@@ -884,6 +888,7 @@ export default class Editable extends Component {
 					{ ...ariaProps }
 					className={ className }
 					key={ key }
+					position={ position }
 				/>
 				{ isPlaceholderVisible &&
 					<Tagname
