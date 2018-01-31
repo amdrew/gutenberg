@@ -784,7 +784,7 @@ export function getBlockFocus( state, uid ) {
  *
  * @returns {boolean} Whether the block should focus next.
  */
-export function blockShouldFocusNext( state, uid ) {
+export function shouldBlockFocusNext( state, uid ) {
 	return state.blockSelection.next === uid;
 }
 
