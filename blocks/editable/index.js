@@ -550,6 +550,7 @@ export default class Editable extends Component {
 			}
 
 			event.preventDefault();
+			event.stopImmediatePropagation();
 		}
 
 		// If we click shift+Enter on inline Editables, we avoid creating two contenteditables
